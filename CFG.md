@@ -7,7 +7,7 @@
 * DIV `/`
 * ADD `+`
 * SUB `-`
-* INTEGER: `[0..9]*`
+* INTEGER `[0..9]*`
 
 expr -> term ((MUL|DIV) term)*
 

@@ -4,7 +4,7 @@ extern crate faerie;
 
 // use faerie::data_type::Type;
 // use faerie::token::Token;
-use faerie::interpreter::Interpreter;
+use faerie::interpreter::Parser;
 
 fn main() {
     let mut file = File::open("./program.fae").expect("file not found");
@@ -14,9 +14,9 @@ fn main() {
     let lines: Vec<&str> = program.split("\n").collect();
 
     for line in lines {
-        let mut interpreter = Interpreter::new(line);
+        let mut parser = Parser::new(line);
 
-        let result = interpreter.expr();
+        let result = parser.expr();
         println!("{} is {}", line, result)
     }
 }

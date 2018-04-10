@@ -1,7 +1,8 @@
+mod ast;
 mod data_type;
-mod token;
-mod lexer;
 mod errors;
+mod lexer;
+mod token;
 
 use self::data_type::Type;
 use self::token::Token;
@@ -10,24 +11,24 @@ use self::errors::parsing_error;
 use self::errors::unmatched_token_error;
 
 #[derive(Debug)]
-pub struct Interpreter {
+pub struct Parser {
     current_token: Token,
     lexer: Lexer
 }
 
-impl Interpreter {
-    pub fn new(program: &str) -> Interpreter {
+impl Parser {
+    pub fn new(program: &str) -> Parser {
         let text: Vec<char> = String::from(program).chars().collect();
         let mut lexer = Lexer::new(text);
         let current_token = lexer.get_next_token();
-        Interpreter {
+        Parser {
             lexer,
             current_token
         }
     }
 }
 
-impl Interpreter {
+impl Parser {
 
     fn eat(&mut self, token_type: Type) {
         if self.current_token._type == token_type {
