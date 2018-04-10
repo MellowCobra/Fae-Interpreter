@@ -16,7 +16,8 @@ fn main() {
     for line in lines {
         let mut parser = Parser::new(line);
 
-        let result = parser.expr();
-        println!("{} is {}", line, result)
+        let result = parser.parse();
+        // result.print();
+        println!("{} is {:#?}", line, result)
     }
 }

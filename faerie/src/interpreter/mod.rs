@@ -4,6 +4,7 @@ mod errors;
 mod lexer;
 mod token;
 
+use self::ast::AST;
 use self::data_type::Type;
 use self::token::Token;
 use self::lexer::Lexer;
@@ -30,6 +31,10 @@ impl Parser {
 
 impl Parser {
 
+    pub fn parse(&mut self) -> AST {
+        self.expr()
+    }
+
     fn eat(&mut self, token_type: Type) {
         if self.current_token._type == token_type {
             self.current_token = self.lexer.get_next_token();
@@ -38,80 +43,74 @@ impl Parser {
         }
     }
 
-    pub fn expr(&mut self) -> i32 {
-        let mut result = self.term();
-
-        // println!("first term of expr is {} and current_char is {}", result, self.current_char);
+    fn expr(&mut self) -> AST {
+        let mut node = self.term();
 
         while self.current_token._type == Type::ADD || self.current_token._type == Type::SUB {
-         
-            let op = self.op();
-            let right = self.term();
+            let token = self.current_token.clone();
 
-            result = match op {
-                Type::ADD => result + right,
-                Type::SUB => result - right,
+            match token._type {
+                Type::ADD => self.eat(Type::ADD),
+                Type::SUB => self.eat(Type::SUB),
                 _ => {
-                    unmatched_token_error::throw(0, self.lexer.pos, &Type::ADD, &op);
-                    0
+                    unmatched_token_error::throw(0, self.lexer.pos, &Type::ADD, &token._type)
                 }
+            }
+
+            node = AST::BinOp { 
+                left: Box::new(node),
+                op: token.clone(), 
+                token,
+                right: Box::new(self.term())
             }
         }
 
-        result
+        node
     }
 
-    fn term(&mut self) -> i32 {
-
-        let mut result = self.factor();
-
-        // println!("first factor of term is {} and current_char is {}", result, self.current_char);
+    fn term(&mut self) -> AST {
+        let mut node = self.factor();
 
         while self.current_token._type == Type::MUL || self.current_token._type == Type::DIV {
-            
-            let op = self.op();
-            let right = self.factor();
-
-            result = match op {
-                Type::MUL => result * right,
-                Type::DIV => result / right,
+            let token = self.current_token.clone();
+            match token._type {
+                Type::MUL => self.eat(Type::MUL),
+                Type::DIV => self.eat(Type::DIV),
                 _ => {
-                    unmatched_token_error::throw(0, self.lexer.pos, &Type::MUL, &op);
-                    0
+                    unmatched_token_error::throw(0, self.lexer.pos, &Type::MUL, &token._type);
                 }
+            }
+
+            node = AST::BinOp {
+                left: Box::new(node),
+                op: token.clone(),
+                token, 
+                right: Box::new(self.factor())
             }
         }
 
-        result
+        node
     }
 
-    fn factor(&mut self) -> i32 {
+    fn factor(&mut self) -> AST {
         if self.current_token._type == Type::INTEGER {
-            let t = self.current_token.clone();
+            let token = self.current_token.clone();
             self.eat(Type::INTEGER);
-            t.value
+            AST::Num {
+                value: token.value,
+                token
+            }
         } else if self.current_token._type == Type::LPR {
             self.eat(Type::LPR);
-            let result = self.expr();
+            let node = self.expr();
             self.eat(Type::RPR);
-            result
+            node
         } else {
             unmatched_token_error::throw(0, self.lexer.pos, &Type::INTEGER, &self.current_token._type);
-            0
+            AST::Num {
+                token: Token::new(Type::EMPTY, 0),
+                value: 0
+            }
         }
-    }
-
-    fn op(&mut self) -> Type {
-        let op = self.current_token._type.clone();
-        
-        match op {
-            Type::ADD => self.eat(Type::ADD),
-            Type::SUB => self.eat(Type::SUB),
-            Type::MUL => self.eat(Type::MUL),
-            Type::DIV => self.eat(Type::DIV),
-            _ => parsing_error::throw(0, self.lexer.pos)
-        }
-
-        op
     }
 }
