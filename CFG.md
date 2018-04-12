@@ -13,4 +13,4 @@ expr -> term ((MUL|DIV) term)*
 
 term -> factor ((ADD|SUB) factor)*
 
-factor -> INTEGER | LPR expr RPR
+factor -> (ADD|SUB) factor | INTEGER | LPR expr RPR

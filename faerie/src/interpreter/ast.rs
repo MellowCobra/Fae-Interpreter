@@ -5,6 +5,7 @@ pub trait Visit {
     fn visit(&self) -> i32;
 }
 
+
 pub struct BinOp {
     token: Token,
     left: Box<Visit>,
@@ -52,5 +53,31 @@ impl Num {
 impl Visit for Num {
     fn visit(&self) -> i32 {
         self.value
+    }
+}
+
+pub struct UnaryOp {
+    token: Token,
+    op: Token,
+    expr: Box<Visit>
+}
+
+impl UnaryOp {
+    pub fn new(token: Token, expr: Box<Visit>) -> UnaryOp {
+        UnaryOp {
+            token: token.clone(),
+            op: token,
+            expr
+        }
+    }
+}
+
+impl Visit for UnaryOp {
+    fn visit(&self) -> i32 {
+        match self.op._type {
+            Type::ADD => self.expr.visit(),
+            Type::SUB => - self.expr.visit(),
+            _ => panic!("Bad op token {:?} in unary operation", self.op)
+        }
     }
 }
