@@ -4,6 +4,7 @@ extern crate faerie;
 
 // use faerie::data_type::Type;
 // use faerie::token::Token;
+// use faerie::interpreter::Parser;
 use faerie::interpreter::Interpreter;
 
 fn main() {
@@ -14,9 +15,14 @@ fn main() {
     let lines: Vec<&str> = program.split("\n").collect();
 
     for line in lines {
-        let mut interpreter = Interpreter::new(line);
+        // let mut parser = Parser::new(line);
 
-        let result = interpreter.expr();
-        println!("{} is {}", line, result)
+        // let result = parser.parse();
+        // result.print();
+
+        let mut interpreter = Interpreter::new(line);
+        let result = interpreter.interpret();
+
+        println!("{} is {:#?}", line, result)
     }
 }
