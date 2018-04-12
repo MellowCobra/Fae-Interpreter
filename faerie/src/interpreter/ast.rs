@@ -1,7 +1,56 @@
 use interpreter::token::Token;
+use interpreter::data_type::Type;
 
-#[derive(Debug,Clone)]
-pub enum AST {
-    BinOp { left: Box<AST>, token: Token, op: Token, right: Box<AST> },
-    Num { token: Token, value: i32 }
+pub trait Visit {
+    fn visit(&self) -> i32;
+}
+
+pub struct BinOp {
+    token: Token,
+    left: Box<Visit>,
+    op: Token,
+    right: Box<Visit>
+}
+
+impl BinOp {
+    pub fn new(token: Token, left: Box<Visit>, right: Box<Visit>) -> BinOp {
+        BinOp {
+            token: token.clone(),
+            op: token,
+            left,
+            right
+        }
+    } 
+}
+
+impl Visit for BinOp {
+    fn visit(&self) -> i32 {
+        match self.op._type {
+            Type::ADD => self.left.visit() + self.right.visit(),
+            Type::SUB => self.left.visit() - self.right.visit(),
+            Type::MUL => self.left.visit() * self.right.visit(),
+            Type::DIV => self.left.visit() / self.right.visit(),
+            _ => panic!("Bad op token {:?} in binary operation", self.op)
+        }
+    }
+}
+
+pub struct Num {
+    token: Token,
+    value: i32
+}
+
+impl Num {
+    pub fn new(token: Token) -> Num {
+        Num {
+            value: token.value,
+            token: token.clone()
+        }
+    }
+}
+
+impl Visit for Num {
+    fn visit(&self) -> i32 {
+        self.value
+    }
 }

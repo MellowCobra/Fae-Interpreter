@@ -1,9 +1,3 @@
-pub mod parsing_error {
-    pub fn throw(line: i32, location: usize) {
-        panic!("Parsing exception occured on line {} at location {}", line, location);
-    }
-}
-
 pub mod unknown_token_error {
     pub fn throw(line: i32, location: usize, token: char) {
         panic!("Parsing exception occured on line {} at location {}: Unknown token {}", line, location, token);
