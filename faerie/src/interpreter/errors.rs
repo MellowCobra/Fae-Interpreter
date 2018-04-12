@@ -16,4 +16,3 @@ pub mod unmatched_token_error {
         panic!("Parsing exception occured on line {} at location {}: Unmatched token - expected {:?} but got {:?} instead", line, location, expected, actual);
     }
 }
-

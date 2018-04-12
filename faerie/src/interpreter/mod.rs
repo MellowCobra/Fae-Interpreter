@@ -2,115 +2,70 @@ mod ast;
 mod data_type;
 mod errors;
 mod lexer;
+mod parser;
 mod token;
 
 use self::ast::AST;
+use self::parser::Parser;
 use self::data_type::Type;
-use self::token::Token;
-use self::lexer::Lexer;
-use self::errors::parsing_error;
-use self::errors::unmatched_token_error;
 
-#[derive(Debug)]
-pub struct Parser {
-    current_token: Token,
-    lexer: Lexer
+trait NodeVisitor {
+    fn visit(&mut self, node: AST) -> i32;
 }
 
-impl Parser {
-    pub fn new(program: &str) -> Parser {
-        let text: Vec<char> = String::from(program).chars().collect();
-        let mut lexer = Lexer::new(text);
-        let current_token = lexer.get_next_token();
-        Parser {
-            lexer,
-            current_token
-        }
-    }
+pub struct Interpreter {
+    parser: Parser
 }
 
-impl Parser {
-
-    pub fn parse(&mut self) -> AST {
-        self.expr()
-    }
-
-    fn eat(&mut self, token_type: Type) {
-        if self.current_token._type == token_type {
-            self.current_token = self.lexer.get_next_token();
-        } else {
-            unmatched_token_error::throw(0, self.lexer.pos, &token_type, &self.current_token._type);
+impl Interpreter {
+    pub fn new(program: &str) -> Interpreter {
+        Interpreter {
+            parser: Parser::new(program)
         }
     }
 
-    fn expr(&mut self) -> AST {
-        let mut node = self.term();
+    pub fn interpret(&mut self) -> i32 {
+        // self.visit(self.parser.parse())
+        let mut ast = self.parser.parse();
+        ast.visit()
+    }
 
-        while self.current_token._type == Type::ADD || self.current_token._type == Type::SUB {
-            let token = self.current_token.clone();
+    // fn visit_BinOp(&mut self, left, op, right) -> i32 {
+    //     match op._type {
+    //         Type::ADD => self.visit(left.clone()) + self.visit(right.clone()),
+    //         Type::SUB => self.visit(left.clone()) - self.visit(right.clone()),
+    //         Type::MUL => self.visit(left.clone()) * self.visit(right.clone()),
+    //         Type::DIV => self.visit(left.clone()) / self.visit(right.clone()),
+    //     }
+    // }
 
-            match token._type {
-                Type::ADD => self.eat(Type::ADD),
-                Type::SUB => self.eat(Type::SUB),
-                _ => {
-                    unmatched_token_error::throw(0, self.lexer.pos, &Type::ADD, &token._type)
+    // fn visit_Num(&mut self, ) -> i32 {
+    //     node.value
+    // }
+}
+
+// impl NodeVisitor for Interpreter {
+//     fn visit(&mut self, node: AST) -> i32 {
+//         match node {
+//             BinOp => self.visit_BinOp(node.left.clone(), node.op.clone(), node.right.clone()),
+//             Num => self.visit_Num(node.value)
+//         }
+//     }
+// }
+
+impl AST {
+    pub fn visit(&mut self) -> i32 {
+        match *self {
+            AST::BinOp { ref left, ref token, ref op, ref right } => {
+                match op._type {
+                    Type::ADD => left.clone().visit() + right.clone().visit(),
+                    Type::SUB => left.clone().visit() - right.clone().visit(),
+                    Type::MUL => left.clone().visit() * right.clone().visit(),
+                    Type::DIV => left.clone().visit() / right.clone().visit(),
+                    _ => panic!("AST has a bad operation in it!")
                 }
-            }
-
-            node = AST::BinOp { 
-                left: Box::new(node),
-                op: token.clone(), 
-                token,
-                right: Box::new(self.term())
-            }
-        }
-
-        node
-    }
-
-    fn term(&mut self) -> AST {
-        let mut node = self.factor();
-
-        while self.current_token._type == Type::MUL || self.current_token._type == Type::DIV {
-            let token = self.current_token.clone();
-            match token._type {
-                Type::MUL => self.eat(Type::MUL),
-                Type::DIV => self.eat(Type::DIV),
-                _ => {
-                    unmatched_token_error::throw(0, self.lexer.pos, &Type::MUL, &token._type);
-                }
-            }
-
-            node = AST::BinOp {
-                left: Box::new(node),
-                op: token.clone(),
-                token, 
-                right: Box::new(self.factor())
-            }
-        }
-
-        node
-    }
-
-    fn factor(&mut self) -> AST {
-        if self.current_token._type == Type::INTEGER {
-            let token = self.current_token.clone();
-            self.eat(Type::INTEGER);
-            AST::Num {
-                value: token.value,
-                token
-            }
-        } else if self.current_token._type == Type::LPR {
-            self.eat(Type::LPR);
-            let node = self.expr();
-            self.eat(Type::RPR);
-            node
-        } else {
-            unmatched_token_error::throw(0, self.lexer.pos, &Type::INTEGER, &self.current_token._type);
-            AST::Num {
-                token: Token::new(Type::EMPTY, 0),
-                value: 0
-            }
+            },
+            AST::Num {ref token, ref value} => *value
         }
     }
 }
